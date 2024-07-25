@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Image to ICO Converter</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        #logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            background-image: url('./logo/converted_images 3/DALL·E 2024-07-25 07.png');
+            background-size: cover;
+            background-position: center;
+        }
+        #dropZone {
+            border: 2px dashed #3498db;
+            border-radius: 20px;
+            width: 100%;
+            margin: 20px 0;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #ecf0f1;
+        }
+        #dropZone:hover, #dropZone.highlight {
+            border-color: #2980b9;
+            background-color: #e0e6e8;
+        }
+        #fileInput {
+            display: none;
+        }
+        #convertBtn {
+            background-color: #2ecc71;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border-radius: 5px;
+        }
+        #convertBtn:hover {
+            background-color: #27ae60;
+        }
+        #convertBtn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        #preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div id="logo"></div>
+    <h1>Enhanced Image to ICO Converter</h1>
+    <p>Drop your PNG, JPG, or SVG file here or click to select</p>
+    <div id="dropZone">
+        <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.svg" />
+        Drop your image here or click to select
+    </div>
+    <img id="preview" alt="Image preview" style="display: none;">
+    <br>
+    <button id="convertBtn" disabled>Convert to ICO</button>
+    <p id="status"></p>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const convertBtn = document.getElementById('convertBtn');
+        const status = document.getElementById('status');
+
+        function setupEventListeners() {
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+            convertBtn.addEventListener('click', convertToIco);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropZone.classList.add('highlight');
+        }
+
+        function handleDragLeave() {
+            dropZone.classList.remove('highlight');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('highlight');
+            handleFiles(e.dataTransfer.files);
+        }
+
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        preview.src = e.target.result;
+                        preview.style.display = 'inline-block';
+                        convertBtn.disabled = false;
+                        status.textContent = 'Image loaded successfully!';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    status.textContent = 'Please select a valid image file (PNG, JPG, or SVG).';
+                }
+            }
+        }
+
+        function convertToIco() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = () => {
+                const size = 256; // ICO size is typically 256x256
+                canvas.width = size;
+                canvas.height = size;
+                ctx.drawImage(img, 0, 0, size, size);
+                
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'icon.ico';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        status.textContent = 'Conversion successful! ICO file downloaded.';
+                    } else {
+                        status.textContent = 'Failed to convert image to ICO.';
+                    }
+                }, 'image/x-icon');
+            };
+            img.onerror = () => {
+                status.textContent = 'Failed to load the image for conversion.';
+            };
+            img.src = preview.src;
+        }
+
+        setupEventListeners();
+    </script>
+</body>
+</html>
